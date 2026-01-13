@@ -54,8 +54,17 @@ DB_USERNAME=root
 
 DB_PASSWORD=
 
+and then run 
+
+composer install
+
+after that run this
+
+pnpm run install | npm install
+
 ### 5. Generate application key
 php artisan key:generate
+
 ### 6. Run database migrations + seed
 php artisan migrate --seed
 
