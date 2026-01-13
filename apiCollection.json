@@ -1,0 +1,264 @@
+{
+    "info": {
+      "_postman_id": "mishkat-nour-api-2025",
+      "name": "Mishkat Nour - Categories & Products API",
+      "description": "API collection for Categories and Products CRUD operations\nBase URL: http://localhost:8000/api\n\nNote: Most endpoints require authentication (Sanctum token or cookie).",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "name": "Categories",
+        "item": [
+          {
+            "name": "Get All Categories",
+            "request": {
+              "method": "GET",
+              "header": [],
+              "url": {
+                "raw": "{{baseUrl}}/categories",
+                "host": ["{{baseUrl}}"],
+                "path": ["categories"]
+              },
+              "description": "Returns list of all categories"
+            },
+            "response": []
+          },
+          {
+            "name": "Create Category",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"name\": \"New Category Name\",\n    \"slug\": \"new-category-slug\",\n    \"description\": \"Optional description here\"\n}"
+              },
+              "url": {
+                "raw": "{{baseUrl}}/categories",
+                "host": ["{{baseUrl}}"],
+                "path": ["categories"]
+              },
+              "description": "Create a new category"
+            },
+            "response": []
+          },
+          {
+            "name": "Get Single Category",
+            "request": {
+              "method": "GET",
+              "header": [],
+              "url": {
+                "raw": "{{baseUrl}}/categories/{{categoryId}}",
+                "host": ["{{baseUrl}}"],
+                "path": ["categories", "{{categoryId}}"]
+              },
+              "description": "Get details of one category"
+            },
+            "response": []
+          },
+          {
+            "name": "Update Category",
+            "request": {
+              "method": "PUT",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"name\": \"Updated Category Name\",\n    \"slug\": \"updated-slug\",\n    \"description\": \"Updated description\"\n}"
+              },
+              "url": {
+                "raw": "{{baseUrl}}/categories/{{categoryId}}",
+                "host": ["{{baseUrl}}"],
+                "path": ["categories", "{{categoryId}}"]
+              },
+              "description": "Update existing category"
+            },
+            "response": []
+          },
+          {
+            "name": "Delete Category",
+            "request": {
+              "method": "DELETE",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "url": {
+                "raw": "{{baseUrl}}/categories/{{categoryId}}",
+                "host": ["{{baseUrl}}"],
+                "path": ["categories", "{{categoryId}}"]
+              },
+              "description": "Delete a category (usually needs confirmation)"
+            },
+            "response": []
+          }
+        ]
+      },
+      {
+        "name": "Products",
+        "item": [
+          {
+            "name": "Get All Products",
+            "request": {
+              "method": "GET",
+              "header": [],
+              "url": {
+                "raw": "{{baseUrl}}/products?category_id={{categoryId}}&search=keyword&per_page=15",
+                "host": ["{{baseUrl}}"],
+                "path": ["products"],
+                "query": [
+                  { "key": "category_id", "value": "{{categoryId}}", "disabled": true },
+                  { "key": "search", "value": "keyword", "disabled": true },
+                  { "key": "per_page", "value": "15", "disabled": true }
+                ]
+              },
+              "description": "List products (with optional filters)"
+            },
+            "response": []
+          },
+          {
+            "name": "Create Product (with image)",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "body": {
+                "mode": "formdata",
+                "formdata": [
+                  {
+                    "key": "name",
+                    "value": "New Amazing Product",
+                    "type": "text"
+                  },
+                  {
+                    "key": "price",
+                    "value": "299.99",
+                    "type": "text"
+                  },
+                  {
+                    "key": "category_id",
+                    "value": "{{categoryId}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "description",
+                    "value": "Product description goes here...",
+                    "type": "text"
+                  },
+                  {
+                    "key": "image",
+                    "type": "file",
+                    "src": []
+                  }
+                ]
+              },
+              "url": {
+                "raw": "{{baseUrl}}/products",
+                "host": ["{{baseUrl}}"],
+                "path": ["products"]
+              },
+              "description": "Create product (multipart/form-data for image upload)"
+            },
+            "response": []
+          },
+          {
+            "name": "Get Single Product",
+            "request": {
+              "method": "GET",
+              "header": [],
+              "url": {
+                "raw": "{{baseUrl}}/products/{{productId}}",
+                "host": ["{{baseUrl}}"],
+                "path": ["products", "{{productId}}"]
+              }
+            },
+            "response": []
+          },
+          {
+            "name": "Update Product",
+            "request": {
+              "method": "PUT",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"name\": \"Updated Product Name\",\n    \"price\": 349.99,\n    \"category_id\": {{categoryId}},\n    \"description\": \"Updated description\"\n}"
+              },
+              "url": {
+                "raw": "{{baseUrl}}/products/{{productId}}",
+                "host": ["{{baseUrl}}"],
+                "path": ["products", "{{productId}}"]
+              },
+              "description": "Update product (JSON version - image update needs separate endpoint or formdata)"
+            },
+            "response": []
+          },
+          {
+            "name": "Delete Product",
+            "request": {
+              "method": "DELETE",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "url": {
+                "raw": "{{baseUrl}}/products/{{productId}}",
+                "host": ["{{baseUrl}}"],
+                "path": ["products", "{{productId}}"]
+              }
+            },
+            "response": []
+          }
+        ]
+      }
+    ],
+    "variable": [
+      {
+        "key": "baseUrl",
+        "value": "http://localhost:8000/api",
+        "type": "string"
+      },
+      {
+        "key": "categoryId",
+        "value": "1",
+        "type": "string"
+      },
+      {
+        "key": "productId",
+        "value": "1",
+        "type": "string"
+      }
+    ]
+  }

@@ -1,0 +1,65 @@
+{
+    "compilerOptions": {
+        // Language and Environment
+        "target": "esnext",
+        "lib": ["esnext","ES2020", "DOM", "DOM.Iterable","scripthost"],
+        "jsx": "preserve",
+        "allowJs": true,
+        "useDefineForClassFields": true,
+
+        // Modules
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "resolveJsonModule": true,
+        "allowImportingTsExtensions": true,
+        "moduleDetection": "force",
+
+        // Emit
+        "noEmit": true,
+        "sourceMap": true,
+        "declaration": true,
+        "declarationMap": true,
+
+        // Interop Constraints
+        "isolatedModules": true,
+        "verbatimModuleSyntax": true,
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+
+        // Type Checking - Strict Mode
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUncheckedIndexedAccess": true,
+        "exactOptionalPropertyTypes": false,
+        "noImplicitReturns": true,
+        "noImplicitOverride": true,
+        "noPropertyAccessFromIndexSignature": false,
+        "noUncheckedSideEffectImports": true,
+
+        // Completeness
+        "skipLibCheck": true,
+
+        // Path Mapping
+        "baseUrl": "./",
+        "paths": {
+            "@/*": ["./resources/js/*"]
+        },
+
+        // Types
+        "types": ["vite/client"]
+    },
+    "include": [
+        "resources/js/**/*.ts",
+        "resources/js/**/*.d.ts",
+        "resources/js/**/*.tsx",
+        "resources/js/**/*.vue",
+        "resources/js/types/**/*.d.ts"
+    ],
+    "exclude": ["node_modules", "vendor", "public", "storage"],
+    "vueCompilerOptions": {
+        "target": 3
+    }
+}
