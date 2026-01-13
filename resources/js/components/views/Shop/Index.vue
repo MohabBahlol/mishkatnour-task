@@ -11,9 +11,9 @@
             <div class="p-6 mb-8 bg-white rounded-xl border border-gray-200 shadow-sm">
                 <h2 class="mb-4 text-xl font-semibold text-gray-800">Filter Products</h2>
 
-                <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-6">
                     <!-- Name Search -->
-                    <div>
+                    <div class="lg:col-span-2">
                         <label class="block mb-2 text-sm font-medium text-gray-700">
                             Search by Name
                         </label>
@@ -33,7 +33,7 @@
                     </div>
 
                     <!-- Category Filter -->
-                    <div class="relative">
+                    <div class="relative lg:col-span-2">
                         <label class="block mb-2 text-sm font-medium text-gray-700">
                             Category
                         </label>
@@ -91,10 +91,10 @@
                         </div>
                     </div>
 
-                    <!-- Min Price -->
+                    <!-- Price Range: From Price (Greater than or equal) -->
                     <div>
                         <label class="block mb-2 text-sm font-medium text-gray-700">
-                            Min Price
+                            Min Price (≥)
                         </label>
                         <div class="relative">
                             <input
@@ -109,12 +109,13 @@
                                 <span class="text-gray-500">$</span>
                             </div>
                         </div>
+                        <p class="mt-1 text-xs text-gray-500">Greater than or equal to</p>
                     </div>
 
-                    <!-- Max Price -->
+                    <!-- Price Range: To Price (Less than or equal) -->
                     <div>
                         <label class="block mb-2 text-sm font-medium text-gray-700">
-                            Max Price
+                            Max Price (≤)
                         </label>
                         <div class="relative">
                             <input
@@ -128,6 +129,117 @@
                             <div class="flex absolute inset-y-0 left-0 items-center pl-3 pointer-events-none">
                                 <span class="text-gray-500">$</span>
                             </div>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Less than or equal to</p>
+                    </div>
+
+
+                </div>
+
+                <!-- Price Comparison Options -->
+                <div class="grid grid-cols-1 gap-4 mt-6 md:grid-cols-3">
+                    <!-- Exact Price Filter -->
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-700">
+                            Exact Price (=)
+                        </label>
+                        <div class="relative">
+                            <input
+                                type="number"
+                                v-model.number="filters.exact_price"
+                                min="0"
+                                step="0.01"
+                                class="py-3 pr-4 pl-8 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                                placeholder="0.00"
+                            />
+                            <div class="flex absolute inset-y-0 left-0 items-center pl-3 pointer-events-none">
+                                <span class="text-gray-500">$</span>
+                            </div>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Exact price match</p>
+                    </div>
+                    <!-- Price Greater Than -->
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-700">
+                            Price Greater Than (>)
+                        </label>
+                        <div class="relative">
+                            <input
+                                type="number"
+                                v-model.number="filters.price_greater_than"
+                                min="0"
+                                step="0.01"
+                                class="py-3 pr-4 pl-8 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                                placeholder="0.00"
+                            />
+                            <div class="flex absolute inset-y-0 left-0 items-center pl-3 pointer-events-none">
+                                <span class="text-gray-500">$</span>
+                            </div>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Strictly greater than</p>
+                    </div>
+
+                    <!-- Price Less Than -->
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-700">
+                            Price Less Than (<)
+                        </label>
+                        <div class="relative">
+                            <input
+                                type="number"
+                                v-model.number="filters.price_less_than"
+                                min="0"
+                                step="0.01"
+                                class="py-3 pr-4 pl-8 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                                placeholder="9999.99"
+                            />
+                            <div class="flex absolute inset-y-0 left-0 items-center pl-3 pointer-events-none">
+                                <span class="text-gray-500">$</span>
+                            </div>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Strictly less than</p>
+                    </div>
+
+                    <!-- Price Range Between -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block mb-2 text-sm font-medium text-gray-700">
+                                Price From
+                            </label>
+                            <div class="relative">
+                                <input
+                                    type="number"
+                                    v-model.number="filters.price_from"
+                                    min="0"
+                                    step="0.01"
+                                    class="py-3 pr-4 pl-8 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                                    placeholder="0.00"
+                                />
+                                <div class="flex absolute inset-y-0 left-0 items-center pl-3 pointer-events-none">
+                                    <span class="text-gray-500">$</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block mb-2 text-sm font-medium text-gray-700">
+                                Price To
+                            </label>
+                            <div class="relative">
+                                <input
+                                    type="number"
+                                    v-model.number="filters.price_to"
+                                    min="0"
+                                    step="0.01"
+                                    class="py-3 pr-4 pl-8 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                                    placeholder="9999.99"
+                                />
+                                <div class="flex absolute inset-y-0 right-0 items-center pr-3 pointer-events-none">
+                                    <span class="text-gray-500">$</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-span-2">
+                            <p class="mt-1 text-xs text-gray-500">Price range between (inclusive)</p>
                         </div>
                     </div>
                 </div>
@@ -297,12 +409,20 @@ const loading = ref(true);
 const products = ref<Product[]>([]);
 const showCategoryDropdown = ref(false);
 
-// Filters
+// Filters - Updated with new price filters
 const filters = reactive({
     name: '',
     category_id: null as number | null,
-    min_price: null as number | null,
-    max_price: null as number | null,
+    // Original min/max price filters (greater than or equal / less than or equal)
+    min_price: null as number | null,  // ≥ (Greater than or equal)
+    max_price: null as number | null,  // ≤ (Less than or equal)
+
+    // New price filters
+    exact_price: null as number | null,           // = (Exact price)
+    price_greater_than: null as number | null,    // > (Strictly greater than)
+    price_less_than: null as number | null,       // < (Strictly less than)
+    price_from: null as number | null,            // From (for range)
+    price_to: null as number | null,              // To (for range)
 });
 
 // Categories
@@ -333,14 +453,36 @@ const filteredProducts = computed(() => {
             return false;
         }
 
-        // Filter by min price
+        // Filter by min price (≥)
         if (filters.min_price !== null && product.price < filters.min_price) {
             return false;
         }
 
-        // Filter by max price
+        // Filter by max price (≤)
         if (filters.max_price !== null && product.price > filters.max_price) {
             return false;
+        }
+
+        // Filter by exact price (=)
+        if (filters.exact_price !== null && product.price !== filters.exact_price) {
+            return false;
+        }
+
+        // Filter by price greater than (>)
+        if (filters.price_greater_than !== null && product.price <= filters.price_greater_than) {
+            return false;
+        }
+
+        // Filter by price less than (<)
+        if (filters.price_less_than !== null && product.price >= filters.price_less_than) {
+            return false;
+        }
+
+        // Filter by price range (from - to)
+        if (filters.price_from !== null && filters.price_to !== null) {
+            if (product.price < filters.price_from || product.price > filters.price_to) {
+                return false;
+            }
         }
 
         return true;
@@ -366,6 +508,10 @@ const activeFilterCount = computed(() => {
     if (filters.category_id) count++;
     if (filters.min_price !== null) count++;
     if (filters.max_price !== null) count++;
+    if (filters.exact_price !== null) count++;
+    if (filters.price_greater_than !== null) count++;
+    if (filters.price_less_than !== null) count++;
+    if (filters.price_from !== null && filters.price_to !== null) count++;
     return count;
 });
 
@@ -413,6 +559,11 @@ const resetFilters = () => {
     filters.category_id = null;
     filters.min_price = null;
     filters.max_price = null;
+    filters.exact_price = null;
+    filters.price_greater_than = null;
+    filters.price_less_than = null;
+    filters.price_from = null;
+    filters.price_to = null;
     selectedCategory.value = null;
     categorySearch.value = '';
 };
