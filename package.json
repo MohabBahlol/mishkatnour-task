@@ -31,6 +31,7 @@
         "@bhplugin/vue3-datatable": "^2.0.2",
         "@headlessui/vue": "^1.7.23",
         "@heroicons/vue": "^2.2.0",
+        "lodash": "^4.17.21",
         "vue-router": "4"
     }
 }
