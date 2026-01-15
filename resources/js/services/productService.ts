@@ -45,6 +45,6 @@ export const getCategoriesForSelect = async (): Promise<Array<{ value: number; l
 }
 
 export const getShopProducts = async (params: Record<string, any> = {}) => {
-    const response = await api.get('/products/shop', { params });
+    const response = await api.get('/shop', { params });
     return response.data;
 };

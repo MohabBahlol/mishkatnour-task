@@ -32,4 +32,5 @@ Route::middleware(['api'])->group(function () {
         DELETE /api/products/{id}     - Delete product
     */
     Route::apiResource('products', ProductController::class);
+    Route::get('shop',[ProductController::class, 'products']);
 });

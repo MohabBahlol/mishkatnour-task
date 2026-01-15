@@ -21,6 +21,7 @@
                             <input
                                 type="text"
                                 v-model="filters.name"
+                                @input="handleFilterChange"
                                 placeholder="Product name..."
                                 class="px-4 py-3 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
                             />
@@ -100,6 +101,7 @@
                             <input
                                 type="number"
                                 v-model.number="filters.min_price"
+                                @input="handleFilterChange"
                                 min="0"
                                 step="0.01"
                                 class="py-3 pr-4 pl-8 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
@@ -121,6 +123,7 @@
                             <input
                                 type="number"
                                 v-model.number="filters.max_price"
+                                @input="handleFilterChange"
                                 min="0"
                                 step="0.01"
                                 class="py-3 pr-4 pl-8 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
@@ -132,8 +135,6 @@
                         </div>
                         <p class="mt-1 text-xs text-gray-500">Less than or equal to</p>
                     </div>
-
-
                 </div>
 
                 <!-- Price Comparison Options -->
@@ -147,6 +148,7 @@
                             <input
                                 type="number"
                                 v-model.number="filters.exact_price"
+                                @input="handleFilterChange"
                                 min="0"
                                 step="0.01"
                                 class="py-3 pr-4 pl-8 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
@@ -167,6 +169,7 @@
                             <input
                                 type="number"
                                 v-model.number="filters.price_greater_than"
+                                @input="handleFilterChange"
                                 min="0"
                                 step="0.01"
                                 class="py-3 pr-4 pl-8 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
@@ -188,6 +191,7 @@
                             <input
                                 type="number"
                                 v-model.number="filters.price_less_than"
+                                @input="handleFilterChange"
                                 min="0"
                                 step="0.01"
                                 class="py-3 pr-4 pl-8 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
@@ -210,6 +214,7 @@
                                 <input
                                     type="number"
                                     v-model.number="filters.price_from"
+                                    @input="handleRangeFilterChange"
                                     min="0"
                                     step="0.01"
                                     class="py-3 pr-4 pl-8 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
@@ -228,6 +233,7 @@
                                 <input
                                     type="number"
                                     v-model.number="filters.price_to"
+                                    @input="handleRangeFilterChange"
                                     min="0"
                                     step="0.01"
                                     class="py-3 pr-4 pl-8 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
@@ -253,16 +259,6 @@
                     >
                         Clear Filters
                     </button>
-                    <button
-                        @click="applyFilters"
-                        style="padding:.5rem;"
-                        class="flex gap-2 items-center px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg border border-transparent transition-colors hover:bg-blue-700"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                        </svg>
-                        Apply Filters
-                    </button>
                 </div>
             </div>
 
@@ -282,10 +278,11 @@
                 <div class="flex justify-between items-center mb-6">
                     <div>
                         <h3 class="text-lg font-semibold text-gray-900">
-                            {{ filteredProducts.length }} Products Found
+                            {{ pagination.total }} Products Found
                         </h3>
                         <p class="text-sm text-gray-500">
-                            Showing all available products
+                            Showing {{ products.length }} of {{ pagination.total }} products
+                            <span v-if="pagination.last_page > 1">(Page {{ pagination.current_page }} of {{ pagination.last_page }})</span>
                         </p>
                     </div>
                     <div class="flex gap-3 items-center">
@@ -296,9 +293,9 @@
                 </div>
 
                 <!-- Products Grid -->
-                <div v-if="filteredProducts.length > 0" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div v-if="products.length > 0" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     <div
-                        v-for="product in filteredProducts"
+                        v-for="product in products"
                         :key="product.id"
                         class="overflow-hidden bg-white rounded-xl border border-gray-200 shadow-sm transition-shadow duration-300 group hover:shadow-lg"
                     >
@@ -308,7 +305,7 @@
                             <!-- Category Badge -->
                             <div class="mb-3">
                                 <span class="inline-flex items-center px-3 py-1 text-xs font-medium text-gray-800 bg-gray-100 rounded-full">
-                                    {{ product.category || 'Uncategorized' }}
+                                    {{ product.category?.name || 'Uncategorized' }}
                                 </span>
                             </div>
 
@@ -355,6 +352,42 @@
                         Clear all filters
                     </button>
                 </div>
+
+                <!-- Pagination -->
+                <div v-if="pagination.last_page > 1" class="flex justify-center items-center mt-8">
+                    <div class="flex gap-2 items-center">
+                        <button
+                            @click="changePage(pagination.current_page - 1)"
+                            :disabled="pagination.current_page === 1"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                        >
+                            Previous
+                        </button>
+
+                        <div class="flex gap-2">
+                            <button
+                                v-for="page in paginationLinks"
+                                :key="page"
+                                @click="changePage(page)"
+                                :class="{
+                                    'bg-blue-600 text-white': page === pagination.current_page,
+                                    'bg-white text-gray-700': page !== pagination.current_page
+                                }"
+                                class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 transition-colors hover:bg-gray-50"
+                            >
+                                {{ page }}
+                            </button>
+                        </div>
+
+                        <button
+                            @click="changePage(pagination.current_page + 1)"
+                            :disabled="pagination.current_page === pagination.last_page"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Stats Cards -->
@@ -363,7 +396,7 @@
                     <div class="flex justify-between items-center">
                         <div>
                             <p class="text-sm font-medium text-blue-700">Total Products</p>
-                            <h3 class="mt-2 text-3xl font-bold text-gray-900">{{ products.length }}</h3>
+                            <h3 class="mt-2 text-3xl font-bold text-gray-900">{{ pagination.total }}</h3>
                         </div>
                         <div class="p-3 bg-blue-100 rounded-lg">
                             <span class="text-xl font-bold text-blue-600">📦</span>
@@ -400,35 +433,43 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
-import { getProducts, getCategoriesForSelect } from '@/services/productService';
+import { ref, reactive, computed, onMounted, watch } from 'vue';
+import { getShopProducts, getCategoriesForSelect } from '@/services/productService';
 import type { Product } from '@/types/Product';
 
 // States
-const loading = ref(true);
+const loading = ref(false);
 const products = ref<Product[]>([]);
 const showCategoryDropdown = ref(false);
 
-// Filters - Updated with new price filters
+// Pagination
+const pagination = ref({
+    current_page: 1,
+    last_page: 1,
+    per_page: 12,
+    total: 0
+});
+
+// Filters
 const filters = reactive({
     name: '',
     category_id: null as number | null,
-    // Original min/max price filters (greater than or equal / less than or equal)
-    min_price: null as number | null,  // ≥ (Greater than or equal)
-    max_price: null as number | null,  // ≤ (Less than or equal)
-
-    // New price filters
-    exact_price: null as number | null,           // = (Exact price)
-    price_greater_than: null as number | null,    // > (Strictly greater than)
-    price_less_than: null as number | null,       // < (Strictly less than)
-    price_from: null as number | null,            // From (for range)
-    price_to: null as number | null,              // To (for range)
+    min_price: null as number | null,
+    max_price: null as number | null,
+    exact_price: null as number | null,
+    price_greater_than: null as number | null,
+    price_less_than: null as number | null,
+    price_from: null as number | null,
+    price_to: null as number | null,
 });
 
 // Categories
 const allCategories = ref<Array<{ value: number; label: string }>>([]);
 const categorySearch = ref('');
 const selectedCategory = ref<{ value: number; label: string } | null>(null);
+
+// Search timeout for debouncing
+let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
 // Computed properties
 const filteredCategories = computed(() => {
@@ -439,67 +480,6 @@ const filteredCategories = computed(() => {
     return allCategories.value.filter(category =>
         category.label.toLowerCase().includes(searchTerm)
     );
-});
-
-const filteredProducts = computed(() => {
-    return products.value.filter(product => {
-        // Filter by name
-        if (filters.name && !product.name.toLowerCase().includes(filters.name.toLowerCase())) {
-            return false;
-        }
-
-        // Filter by category
-        if (filters.category_id && product.category_id !== filters.category_id) {
-            return false;
-        }
-
-        // Filter by min price (≥)
-        if (filters.min_price !== null && product.price < filters.min_price) {
-            return false;
-        }
-
-        // Filter by max price (≤)
-        if (filters.max_price !== null && product.price > filters.max_price) {
-            return false;
-        }
-
-        // Filter by exact price (=)
-        if (filters.exact_price !== null && product.price !== filters.exact_price) {
-            return false;
-        }
-
-        // Filter by price greater than (>)
-        if (filters.price_greater_than !== null && product.price <= filters.price_greater_than) {
-            return false;
-        }
-
-        // Filter by price less than (<)
-        if (filters.price_less_than !== null && product.price >= filters.price_less_than) {
-            return false;
-        }
-
-        // Filter by price range (from - to)
-        if (filters.price_from !== null && filters.price_to !== null) {
-            if (product.price < filters.price_from || product.price > filters.price_to) {
-                return false;
-            }
-        }
-
-        return true;
-    });
-});
-
-const averagePrice = computed(() => {
-    if (products.value.length === 0) return 0;
-    const total = products.value.reduce((sum, product) => sum + parseFloat(product.price), 0);
-    return total / products.value.length;
-});
-
-const uniqueCategories = computed(() => {
-    const categories = products.value
-        .map(p => p.category)
-        .filter(Boolean);
-    return [...new Set(categories)];
 });
 
 const activeFilterCount = computed(() => {
@@ -515,12 +495,131 @@ const activeFilterCount = computed(() => {
     return count;
 });
 
+const averagePrice = computed(() => {
+    if (products.value.length === 0) return 0;
+    const total = products.value.reduce((sum, product) => sum + parseFloat(product.price), 0);
+    return total / products.value.length;
+});
+
+const uniqueCategories = computed(() => {
+    const categories = products.value
+        .map(p => p.category?.name)
+        .filter(Boolean);
+    return [...new Set(categories)];
+});
+
+const paginationLinks = computed(() => {
+    const links = [];
+    const totalPages = pagination.value.last_page;
+    const currentPage = pagination.value.current_page;
+
+    // Show first page, last page, and pages around current page
+    if (totalPages <= 7) {
+        for (let i = 1; i <= totalPages; i++) {
+            links.push(i);
+        }
+    } else {
+        links.push(1);
+
+        if (currentPage > 3) {
+            links.push('...');
+        }
+
+        const start = Math.max(2, currentPage - 1);
+        const end = Math.min(totalPages - 1, currentPage + 1);
+
+        for (let i = start; i <= end; i++) {
+            links.push(i);
+        }
+
+        if (currentPage < totalPages - 2) {
+            links.push('...');
+        }
+
+        links.push(totalPages);
+    }
+
+    return links;
+});
+
+// Methods
+const buildQueryParams = () => {
+    const params: Record<string, any> = {
+        page: pagination.value.current_page,
+        per_page: pagination.value.per_page,
+    };
+
+    // Add filters to params
+    if (filters.name) params.name = filters.name;
+    if (filters.category_id) params.category_id = filters.category_id;
+    if (filters.min_price !== null) params.min_price = filters.min_price;
+    if (filters.max_price !== null) params.max_price = filters.max_price;
+    if (filters.exact_price !== null) params.exact_price = filters.exact_price;
+    if (filters.price_greater_than !== null) params.price_greater_than = filters.price_greater_than;
+    if (filters.price_less_than !== null) params.price_less_than = filters.price_less_than;
+    if (filters.price_from !== null && filters.price_to !== null) {
+        params.price_from = filters.price_from;
+        params.price_to = filters.price_to;
+    }
+
+    return params;
+};
+
+const fetchProducts = async () => {
+    try {
+        loading.value = true;
+        const params = buildQueryParams();
+        const response = await getShopProducts(params);
+
+        products.value = response.data;
+        pagination.value = {
+            current_page: response.current_page,
+            last_page: response.last_page,
+            per_page: response.per_page,
+            total: response.total
+        };
+    } catch (error) {
+        console.error('Error fetching products:', error);
+        products.value = [];
+    } finally {
+        loading.value = false;
+    }
+};
+
+const handleFilterChange = () => {
+    // Debounce the filter changes
+    if (searchTimeout) {
+        clearTimeout(searchTimeout);
+    }
+
+    searchTimeout = setTimeout(() => {
+        pagination.value.current_page = 1; // Reset to first page on filter change
+        fetchProducts();
+    }, 500);
+};
+
+const handleRangeFilterChange = () => {
+    // Special handling for range filters to ensure both are set before triggering
+    if (filters.price_from !== null && filters.price_to !== null) {
+        handleFilterChange();
+    }
+};
+
+const changePage = (page: number | string) => {
+    if (typeof page === 'string' || page < 1 || page > pagination.value.last_page) {
+        return;
+    }
+    pagination.value.current_page = page;
+    fetchProducts();
+};
+
 // Category filter functions
 const selectCategory = (category: { value: number; label: string }) => {
     filters.category_id = category.value;
     selectedCategory.value = category;
     categorySearch.value = category.label;
     showCategoryDropdown.value = false;
+    handleFilterChange();
 };
 
 const clearCategory = () => {
@@ -528,6 +627,7 @@ const clearCategory = () => {
     selectedCategory.value = null;
     categorySearch.value = '';
     showCategoryDropdown.value = true;
+    handleFilterChange();
 };
 
 const filterCategoryOptions = () => {
@@ -548,12 +648,6 @@ const onCategoryBlur = () => {
     }, 200);
 };
 
-// Filter actions
-const applyFilters = () => {
-    // Filters are applied automatically via computed property
-    console.log('Filters applied:', filters);
-};
-
 const resetFilters = () => {
     filters.name = '';
     filters.category_id = null;
@@ -566,30 +660,24 @@ const resetFilters = () => {
     filters.price_to = null;
     selectedCategory.value = null;
     categorySearch.value = '';
+    pagination.value.current_page = 1;
+    fetchProducts();
 };
 
-// Load data
-const loadData = async () => {
+// Load categories
+const loadCategories = async () => {
     try {
-        loading.value = true;
-        const [productsData, categoriesData] = await Promise.all([
-            getProducts(),
-            getCategoriesForSelect()
-        ]);
-
-        products.value = productsData;
+        const categoriesData = await getCategoriesForSelect();
         allCategories.value = categoriesData;
-
     } catch (error) {
-        console.error('Error loading data:', error);
-    } finally {
-        loading.value = false;
+        console.error('Error loading categories:', error);
     }
 };
 
 // Lifecycle
 onMounted(() => {
-    loadData();
+    loadCategories();
+    fetchProducts();
 });
 </script>
 

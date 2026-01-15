@@ -19,38 +19,40 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         return Product::query()
-        ->with('category:id,name')           // minimal category data
-        ->select('products.id', 'products.name', 'products.price', 'products.category_id')
+            ->with('category:id,name')           // minimal category data
+            ->select('products.id', 'products.name', 'products.price', 'products.category_id')
 
-        // Search
-        ->when($request->search, function ($q, $search) {
-            $q->where(function ($q) use ($search) {
-                $q->where('products.name', 'like', "%{$search}%")
-                  ->orWhere('products.id', $search)           // exact for ID
-                  ->orWhere('products.price', 'like', "%{$search}%")
-                  ->orWhereHas('category', fn($q) =>
-                      $q->where('name', 'like', "%{$search}%")
-                  );
-            });
-        })
+            // Search
+            ->when($request->search, function ($q, $search) {
+                $q->where(function ($q) use ($search) {
+                    $q->where('products.name', 'like', "%{$search}%")
+                        ->orWhere('products.id', $search)           // exact for ID
+                        ->orWhere('products.price', 'like', "%{$search}%")
+                        ->orWhereHas(
+                            'category',
+                            fn($q) =>
+                            $q->where('name', 'like', "%{$search}%")
+                        );
+                });
+            })
 
-        // Sorting
-        ->when($request->sortBy === 'category.name', function ($q) use ($request) {
-            $q->join('categories', 'products.category_id', '=', 'categories.id')
-              ->orderBy('categories.name', $request->input('sortOrder', 'asc'))
-              ->select('products.*');
-        }, function ($q) use ($request) {
-            $allowed = ['id', 'name', 'price'];
-            $sortBy = in_array($request->sortBy, $allowed) ? $request->sortBy : 'id';
-            $sortOrder = in_array($request->sortOrder, ['asc', 'desc']) ? $request->sortOrder : 'desc';
+            // Sorting
+            ->when($request->sortBy === 'category.name', function ($q) use ($request) {
+                $q->join('categories', 'products.category_id', '=', 'categories.id')
+                    ->orderBy('categories.name', $request->input('sortOrder', 'asc'))
+                    ->select('products.*');
+            }, function ($q) use ($request) {
+                $allowed = ['id', 'name', 'price'];
+                $sortBy = in_array($request->sortBy, $allowed) ? $request->sortBy : 'id';
+                $sortOrder = in_array($request->sortOrder, ['asc', 'desc']) ? $request->sortOrder : 'desc';
 
-            $q->orderBy($sortBy, $sortOrder);
-        })
+                $q->orderBy($sortBy, $sortOrder);
+            })
 
-        // Pagination (5–100 items)
-        ->paginate(
-            min(max($request->input('perPage', 10), 5), 100)
-        );
+            // Pagination (5–100 items)
+            ->paginate(
+                min(max($request->input('perPage', 10), 5), 100)
+            );
     }
 
     /**
@@ -100,65 +102,74 @@ class ProductController extends Controller
         ]);
     }
 
-    public function shop(Request $request)
+    public function products(Request $request)
     {
-        $query = Product::query()
-            ->with('category:id,name')
-            ->select('id', 'name', 'price', 'category_id');
+        return
+            Product::query()
+                ->with('category:id,name')
+                ->select('id', 'name', 'price', 'category_id')
 
-        // 1. Name search
-        if ($search = trim($request->query('name'))) {
-            $query->where('name', 'like', "%{$search}%");
-        }
+                // Name search
+                ->when(
+                    $request->name,
+                    fn($q, $name) =>
+                    $q->where('name', 'like', "%{$name}%")
+                )
 
-        // 2. Category filter
-        if ($categoryId = $request->query('category_id')) {
-            $query->where('category_id', $categoryId);
-        }
+                // Category filter
+                ->when(
+                    $request->category_id,
+                    fn($q, $id) =>
+                    $q->where('category_id', $id)
+                )
 
-        // 3. Price filters - all possible variations
-        if ($request->filled('exact_price')) {
-            $query->where('price', $request->exact_price);
-        }
+                // Price conditions
+                ->when(
+                    $request->filled('exact_price'),
+                    fn($q) =>
+                    $q->where('price', $request->exact_price)
+                )
+                ->when(
+                    $request->filled('min_price'),
+                    fn($q) =>
+                    $q->where('price', '>=', $request->min_price)
+                )
+                ->when(
+                    $request->filled('max_price'),
+                    fn($q) =>
+                    $q->where('price', '<=', $request->max_price)
+                )
+                ->when(
+                    $request->filled('price_greater_than'),
+                    fn($q) =>
+                    $q->where('price', '>', $request->price_greater_than)
+                )
+                ->when(
+                    $request->filled('price_less_than'),
+                    fn($q) =>
+                    $q->where('price', '<', $request->price_less_than)
+                )
+                ->when(
+                    $request->filled('price_from') && $request->filled('price_to'),
+                    fn($q) => $q->whereBetween('price', [
+                        $request->price_from,
+                        $request->price_to
+                    ])
+                )
 
-        if ($request->filled('min_price')) {
-            $query->where('price', '>=', $request->min_price);
-        }
+                // Sorting
+                ->orderBy(
+                    in_array($request->sort_by, ['id', 'name', 'price'])
+                    ? $request->sort_by
+                    : 'id',
+                    in_array($request->sort_direction, ['asc', 'desc'])
+                    ? $request->sort_direction
+                    : 'desc'
+                )
 
-        if ($request->filled('max_price')) {
-            $query->where('price', '<=', $request->max_price);
-        }
-
-        if ($request->filled('price_greater_than')) {
-            $query->where('price', '>', $request->price_greater_than);
-        }
-
-        if ($request->filled('price_less_than')) {
-            $query->where('price', '<', $request->price_less_than);
-        }
-
-        // Range between (from-to)
-        if ($request->filled('price_from') && $request->filled('price_to')) {
-            $query->whereBetween('price', [
-                $request->price_from,
-                $request->price_to
-            ]);
-        }
-
-        // 4. Sorting (optional - you can add later)
-        $sortBy = $request->query('sort_by', 'id');
-        $sortDirection = $request->query('sort_direction', 'desc');
-
-        $allowedSort = ['id', 'name', 'price'];
-        $sortBy = in_array($sortBy, $allowedSort) ? $sortBy : 'id';
-
-        $query->orderBy($sortBy, $sortDirection);
-
-        // 5. Pagination
-        $perPage = min(max($request->query('per_page', 12), 8), 60);
-
-        $products = $query->paginate($perPage);
-
-        return $products;
+                // Pagination
+                ->paginate(
+                    min(max($request->integer('per_page', 12), 8), 60)
+                );
     }
 }
