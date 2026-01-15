@@ -9,16 +9,28 @@ use App\Http\Resources\CategoryResource;
 use App\Models\Category;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
     /**
      * Display a listing of categories.
      */
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request)
     {
-        $categories = Category::select('id', 'name')->get();
-        return CategoryResource::collection($categories);
+        return Category::query()
+                ->select('id', 'name')
+                ->when($request->search, fn($q, $s) =>
+                    $q->where('name', 'like', "%{$s}%")
+                      ->orWhere('id', $s)
+                )
+                ->orderBy(
+                    in_array($request->sortBy, ['id','name']) ? $request->sortBy : 'id',
+                    in_array($request->sortOrder, ['asc','desc']) ? $request->sortOrder : 'desc'
+                )
+                ->paginate(
+                    min(max($request->perPage ?? 10, 5), 100)
+                );
     }
 
     /**

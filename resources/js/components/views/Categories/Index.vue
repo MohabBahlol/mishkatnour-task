@@ -6,14 +6,13 @@
                     <h1 class="text-2xl font-bold text-gray-800">Categories</h1>
                     <div class="flex gap-4 items-center mt-2">
                         <span class="px-3 py-1 text-sm font-medium text-blue-700 bg-blue-100 rounded-full">
-                            {{ rows?.length || 0 }} categories
+                            {{ paginationData.total || 0 }} categories
                         </span>
                         <div class="text-sm text-gray-600">
                             Manage and export your category data
                         </div>
                     </div>
                 </div>
-
                 <button @click="router.push('/categories/add')"
                     class="flex gap-2 items-center px-4 py-2 text-white bg-blue-600 rounded-lg transition-colors hover:bg-blue-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -27,7 +26,21 @@
 
         <div class="p-4 mb-6 bg-white rounded-lg border border-gray-200 shadow-sm">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div class="flex gap-3 items-center">
+                <div class="flex flex-wrap gap-3 items-center">
+                    <!-- Global Search Input -->
+                    <div class="relative">
+                        <input
+                            v-model="searchQuery"
+                            @input="handleSearch"
+                            type="search"
+                            placeholder="Search categories..."
+                            class="py-2 pr-4 pl-10 text-sm rounded-lg border border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                        <svg class="absolute top-2.5 left-3 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+
                     <button type="button"
                         class="flex gap-2 items-center px-4 py-2 text-sm text-white bg-green-600 rounded-lg transition-colors hover:bg-green-700"
                         @click="exportTable('csv')">
@@ -56,7 +69,6 @@
                         Print
                     </button>
                 </div>
-
                 <button @click="fetchCategories"
                     class="flex gap-2 items-center px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-lg transition-colors hover:bg-gray-200"
                     :disabled="loading">
@@ -72,8 +84,18 @@
 
         <!-- Data Table -->
         <div class="overflow-hidden bg-white rounded-lg border border-gray-200 shadow-sm">
-            <vue3-datatable ref="datatable" :rows="rows" :columns="cols" :loading="loading" :sortable="true"
-                :columnFilter="true" class="w-full">
+            <vue3-datatable
+                ref="datatable"
+                :rows="rows"
+                :columns="cols"
+                :loading="loading"
+                :totalRows="paginationData.total"
+                :sortable="true"
+                :columnFilter="false"
+                skin="bh-table-hover"
+                :isServerMode="true"
+                @change="handleTableChange"
+                class="w-full">
                 <!-- @ts-ignore -->
                 <template #actions="slotProps">
                     <div class="flex gap-2 items-center">
@@ -95,7 +117,6 @@
                 </template>
             </vue3-datatable>
         </div>
-
     </div>
 </template>
 
@@ -106,11 +127,27 @@ import '@bhplugin/vue3-datatable/dist/style.css';
 import { deleteCategory, getCategories } from '@/services/categoryService';
 import { useRouter } from 'vue-router';
 import type { Category } from '@/types/Category';
-const router = useRouter();
 
+const router = useRouter();
 const loading = ref(true);
-const datatable = ref();
 const rows = ref<any[]>([]);
+const searchQuery = ref('');
+let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+const paginationData = ref({
+    total: 0,
+    per_page: 10,
+    current_page: 1,
+    last_page: 1
+});
+
+const tableParams = ref({
+    page: 1,
+    perPage: 10,
+    search: '',
+    sortBy: '',
+    sortOrder: 'asc' as 'asc' | 'desc'
+});
 
 const cols = ref([
     { field: 'id', title: 'ID', isUnique: true, type: 'number', width: '200px' },
@@ -125,10 +162,42 @@ const cols = ref([
     }
 ]);
 
+const handleSearch = () => {
+    // Debounce search to avoid too many API calls
+    if (searchTimeout) {
+        clearTimeout(searchTimeout);
+    }
+
+    searchTimeout = setTimeout(() => {
+        tableParams.value.search = searchQuery.value;
+        tableParams.value.page = 1; // Reset to first page on search
+        fetchCategories();
+    }, 500); // Wait 500ms after user stops typing
+};
+
+const handleTableChange = (params: any) => {
+    tableParams.value = {
+        page: params.current_page || 1,
+        perPage: params.pagesize || 10,
+        search: searchQuery.value, // Use our own search input
+        sortBy: params.sort_column || '',
+        sortOrder: params.sort_direction || 'asc'
+    };
+
+    fetchCategories();
+};
+
 const fetchCategories = async () => {
     try {
         loading.value = true;
-        rows.value = await getCategories();
+        const response = await getCategories(tableParams.value);
+        rows.value = response.data;
+        paginationData.value = {
+            total: response.total,
+            per_page: response.per_page,
+            current_page: response.current_page,
+            last_page: response.last_page
+        };
     } catch (error) {
         console.error('Error fetching categories:', error);
         rows.value = [];
@@ -141,10 +210,10 @@ const CategoryEdit = (category: Category) => {
     router.push(`/categories/edit/${category.id}`);
 };
 
-const CategoryDelete = (id: any) => {
+const CategoryDelete = async (id: any) => {
     if (confirm('Are you sure you want to delete this category?')) {
         try {
-            deleteCategory(id);
+            await deleteCategory(id);
             fetchCategories();
         } catch (error) {
             console.error('Error deleting category:', error);
@@ -152,10 +221,21 @@ const CategoryDelete = (id: any) => {
     }
 };
 
+const exportTable = async (type: 'csv' | 'txt' | 'print') => {
+    // For export, fetch all data without pagination
+    let records = rows.value;
 
-const exportTable = (type: 'csv' | 'txt' | 'print') => {
-    let records = datatable.value?.getSelectedRows();
-    if (!records?.length) {
+    // Optionally, fetch all records for export
+    try {
+        const exportParams = {
+            ...tableParams.value,
+            perPage: paginationData.value.total // Get all records
+        };
+        const response = await getCategories(exportParams);
+        records = response.data;
+    } catch (error) {
+        console.error('Error fetching all records for export:', error);
+        // Fall back to current page data
         records = rows.value;
     }
 
@@ -164,12 +244,10 @@ const exportTable = (type: 'csv' | 'txt' | 'print') => {
     if (type === 'csv' || type === 'txt') {
         const coldelimiter = ',';
         const linedelimiter = '\n';
-
         let result = cols.value
             .filter((d: any) => d.field !== 'actions')
             .map((d: any) => d.title)
             .join(coldelimiter);
-
         result += linedelimiter;
 
         records.forEach((item: any) => {
@@ -194,13 +272,11 @@ const exportTable = (type: 'csv' | 'txt' | 'print') => {
         let rowhtml = `<h2 style="text-align: center; margin-bottom: 20px;">${filename}</h2>`;
         rowhtml += '<table style="width: 100%; border-collapse: collapse;">';
         rowhtml += '<thead><tr style="background: #f8f9fa; color: #495057;">';
-
         cols.value
             .filter((d: any) => d.field !== 'actions')
             .forEach((d: any) => {
                 rowhtml += `<th style="padding: 12px; border: 1px solid #dee2e6; text-align: left;">${d.title}</th>`;
             });
-
         rowhtml += '</tr></thead><tbody>';
 
         records.forEach((item: any) => {
@@ -213,7 +289,6 @@ const exportTable = (type: 'csv' | 'txt' | 'print') => {
                 });
             rowhtml += '</tr>';
         });
-
         rowhtml += '</tbody></table>';
 
         const printWindow = window.open('', '_blank', 'width=800,height=600');
